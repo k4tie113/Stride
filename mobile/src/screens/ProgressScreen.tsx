@@ -11,17 +11,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { GradientBackground } from '../components/GradientBackground';
 import { StatCard } from '../components/StatCard';
 import { colors } from '../theme';
-import { apiClient, UserStats, Run, TrainingPlan } from '../api/client';
-// @ts-ignore
-import { LineChart, Grid, YAxis, XAxis } from 'react-native-svg-charts';
-// @ts-ignore
-import * as scale from 'd3-scale';
-// @ts-ignore
+import { UserStats, Run } from '../api/client';
+import apiClient from '../api/client';
+import { LineChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
+
 
 
 
 export default function RunsScreen() {
-  const [showRunModal, setShowRunModal] = useState(false);
   const [runs, setRuns] = useState<Run[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,7 +28,7 @@ export default function RunsScreen() {
   const [visibleRunsCount, setVisibleRunsCount] = useState(3);
   const paceData = runs.map(run => run.pace || 0);
   const runDates = runs.map(run => run.dateFormatted);
-
+  const screenWidth = Dimensions.get('window').width;
   const loadData = async () => {
     try {
       const [runsData, statsData] = await Promise.all([
@@ -142,27 +140,65 @@ export default function RunsScreen() {
         </View>
 
         <View style={styles.chartSection}>
-  <Text style={styles.sectionTitle}>Average Pace Over Time</Text>
-  <View style={styles.chartContainer}>
-    <YAxis
-      data={paceData}
-      contentInset={{ top: 20, bottom: 20 }}
-      svg={{ fill: colors.white, fontSize: 10 }}
-      numberOfTicks={5}
-      formatLabel={value => formatPace(value)}
-    />
-    <View style={styles.chart}>
-      <LineChart
-        style={{ flex: 1 }}
-        data={paceData}
-        svg={{ stroke: colors.yellow }}
-        contentInset={{ top: 20, bottom: 20 }}
-      >
-        <Grid />
-      </LineChart>
-    </View>
+  <Text style={styles.sectionTitle}>Your Average Pace</Text>
   </View>
+
+  <View
+  style={{
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',  // semi-transparent white
+    borderRadius: 16,
+    padding: 12,
+    marginHorizontal: 24,
+    marginBottom: 20,
+  }}
+>
+  <LineChart
+    data={{
+      labels: Array(paceData.length).fill(''),
+      datasets: [
+        {
+          data: paceData,
+          color: () => colors.yellow,
+          strokeWidth: 2,
+        },
+      ],
+    }}
+    width={Dimensions.get('window').width - 64}
+    height={180}
+    withVerticalLines={false}
+    withVerticalLabels = {false}
+    withOuterLines={false}
+    withDots={true}
+    withInnerLines={true}
+    yLabelsOffset={20}
+    bezier
+    style={{
+      backgroundColor: 'transparent',
+      padding: 0,
+      margin: 0,
+      overflow: 'hidden', // force containment
+      borderRadius: 10,
+    }}
+    chartConfig={{
+      backgroundColor: colors.whiteTransparent15,
+      backgroundGradientFrom: colors.purpleLight,
+      backgroundGradientTo: colors.purpleLight,
+      decimalPlaces: 0,
+      color: () => colors.whiteTransparent20,
+      labelColor: () => colors.white,
+      propsForDots: {
+        r: '4',
+        strokeWidth: '2',
+        stroke: colors.white,
+      },
+      propsForBackgroundLines: {
+        stroke: colors.whiteTransparent20,
+      },
+    }}
+    formatYLabel={value => formatPace(Number(value))}
+  />
 </View>
+
 
 
         {/* Runs List */}
@@ -173,16 +209,10 @@ export default function RunsScreen() {
               <View style={styles.emptyIcon}>
                 <Ionicons name="trending-up" size={32} color={colors.whiteTransparent60} />
               </View>
-              <Text style={styles.emptyTitle}>No runs yet</Text>
+              <Text style={styles.emptyTitle}>No runs yet.</Text>
               <Text style={styles.emptySubtitle}>
-                Start tracking your runs to see your progress here
+                Start tracking your runs to see your progress here!
               </Text>
-              <TouchableOpacity
-                style={styles.firstRunButton}
-                onPress={() => setShowRunModal(true)}
-              >
-                <Text style={styles.firstRunButtonText}>Add Your First Run</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.runsList}>

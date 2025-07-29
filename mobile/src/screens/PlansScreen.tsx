@@ -11,7 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { GradientBackground } from '../components/GradientBackground';
 import { colors } from '../theme';
-import { apiClient, TrainingPlan } from '../api/client';
+import { TrainingPlan } from '../api/client';
+import apiClient from '../api/client';
 
 export default function PlansScreen() {
   const [plans, setPlans] = useState<TrainingPlan[]>([]);

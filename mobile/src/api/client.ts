@@ -79,7 +79,7 @@ export interface User {
       duration: 1620,
       runType: 'Easy Run',
       date: '2025-07-23',
-      pace: 8.4,
+      pace: 480,
     },
     {
       id: 'run-2',
@@ -88,7 +88,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-25',
-      pace: 7.9,
+      pace: 470,
     },
     {
       id: 'run-3',
@@ -97,7 +97,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-25',
-      pace: 7.9,
+      pace: 460,
     },
     {
       id: 'run-4',
@@ -106,7 +106,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-25',
-      pace: 8.1,
+      pace: 467,
     },
     {
       id: 'run-5',
@@ -115,7 +115,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-26',
-      pace: 7.9,
+      pace: 455,
     },
     {
       id: 'run-6',
@@ -124,7 +124,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-27',
-      pace: 7.9,
+      pace: 453,
     },
     {
       id: 'run-7',
@@ -133,7 +133,7 @@ export interface User {
       duration: 2100,
       runType: 'Tempo',
       date: '2025-07-29',
-      pace: 8.1,
+      pace: 440,
     },
   ];
   
@@ -183,9 +183,7 @@ export interface User {
       isRest: true,
     },
   ];
-  
-  // ---- MOCK CLIENT ----
-  
+
   class MockApiClient {
     async getUserStats(): Promise<UserStats> {
       return mockStats;
@@ -210,6 +208,10 @@ export interface User {
       return newRun;
     }
   
+    async addRun(run: Run): Promise<void> {
+      mockRuns.unshift(run); // prepend to list
+    }
+  
     async getTrainingPlans(): Promise<TrainingPlan[]> {
       return mockPlans;
     }
@@ -228,5 +230,6 @@ export interface User {
     }
   }
   
-  export const apiClient = new MockApiClient();
   
+const apiClient = new MockApiClient();
+export default apiClient;

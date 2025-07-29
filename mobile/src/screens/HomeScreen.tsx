@@ -11,72 +11,75 @@ import { Ionicons } from '@expo/vector-icons';
 import { GradientBackground } from '../components/GradientBackground';
 import { StatCard } from '../components/StatCard';
 import { colors } from '../theme';
-import { apiClient, UserStats, Run, TrainingPlan } from '../api/client';
+import { UserStats, Run, TrainingPlan } from '../api/client';
+import apiClient from '../api/client';
+import { RunTrackingModal } from '../components/RunTrackingModal';
 
 export default function HomeScreen() {
   const [showRunModal, setShowRunModal] = useState(false);
-    const [runs, setRuns] = useState<Run[]>([]);
-    const [currentPlan, setCurrentPlan] = useState<TrainingPlan | null>(null);
-    const [stats, setStats] = useState<UserStats | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [greeting, setGreeting] = useState('');
-    const [userName, setUserName] = useState('');
-    
-    useEffect(() => {
-      const hour = new Date().getHours();
-      if (hour < 12) {
-        setGreeting('Good morning');
-      } else if (hour < 18) {
-        setGreeting('Good afternoon');
-      } else {
-        setGreeting('Good evening');
-      }
-      // fetch user data
-      const fetchUser = async () => {
-        const stats = await apiClient.getUserStats();
-        setUserName(stats.user.firstname);
-      };
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [currentPlan, setCurrentPlan] = useState<TrainingPlan | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [greeting, setGreeting] = useState('');
+  const [userName, setUserName] = useState('');
 
-  fetchUser();
-    }, []);
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreeting('Good morning');
+    } else if (hour < 18) {
+      setGreeting('Good afternoon');
+    } else {
+      setGreeting('Good evening');
+    }
+    // fetch user data
+    const fetchUser = async () => {
+      const stats = await apiClient.getUserStats();
+      setUserName(stats.user.firstname);
+    };
+    fetchUser();
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000); // Mock refresh
+    loadData();
   };
 
   const loadData = async () => {
-      try {
-        const [statsData, currentPlanData, runsData] = await Promise.all([
-          apiClient.getUserStats(),
-          apiClient.getCurrentPlan(),
-          apiClient.getAllRuns(),
-        ]);
-  
-        setStats(statsData);
-        setCurrentPlan(currentPlanData);
-        setRuns(runsData);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    };
-   useEffect(() => {
-      loadData();
-    }, []);
-    const totalDistance = runs.reduce((sum, run) => sum + run.distance, 0);
-    const averagePace = runs.length > 0 
-      ? runs.reduce((sum, run) => sum + (run.pace || 0), 0) / runs.length 
-      : 0;
-  
-    const formatPace = (paceInSeconds: number): string => {
-      const minutes = Math.floor(paceInSeconds / 60);
-      const seconds = Math.floor(paceInSeconds % 60);
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    };
+    try {
+      const [statsData, currentPlanData, runsData] = await Promise.all([
+        apiClient.getUserStats(),
+        apiClient.getCurrentPlan(),
+        apiClient.getAllRuns(),
+      ]);
+      setStats(statsData);
+      setCurrentPlan(currentPlanData);
+      setRuns(runsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalDistance = runs.reduce((sum, run) => sum + run.distance, 0);
+  const averagePace = runs.length > 0
+    ? runs.reduce((sum, run) => sum + (run.pace || 0), 0) / runs.length
+    : 0;
+
+  const formatPace = (paceInSeconds: number): string => {
+    const minutes = Math.floor(paceInSeconds / 60);
+    const seconds = Math.floor(paceInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <GradientBackground>
       <ScrollView
@@ -84,24 +87,23 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-
         {/* App Header */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-                    <Ionicons name="person" size={48} color={colors.white} />
-                  </View>
-            <Text style={styles.appTitle}>Welcome</Text>
-           <Text style={styles.greeting}>{greeting}, {userName}</Text>
+            <Ionicons name="person" size={48} color={colors.white} />
           </View>
+          <Text style={styles.appTitle}>Welcome</Text>
+          <Text style={styles.greeting}>{greeting}, {userName}</Text>
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.statsSection}>
           <View style={styles.statsRow}>
             <StatCard
               title="Total Distance"
-                value={totalDistance.toFixed(1)}
-                unit="miles"
-                icon="trophy"
+              value={totalDistance.toFixed(1)}
+              unit="miles"
+              icon="trophy"
             />
             <StatCard
               title="Average Pace"
@@ -109,8 +111,8 @@ export default function HomeScreen() {
               unit="per mile"
               icon="trending-up"
             />
-            </View>
           </View>
+        </View>
 
         {/* Main Action Button */}
         <TouchableOpacity
@@ -128,11 +130,13 @@ export default function HomeScreen() {
             </View>
           </View>
         </TouchableOpacity>
-      <View style = {styles.trainingContainer}>
-        <Text style={styles.sectionTitle}>Training Progress</Text>
-      </View>
-      {/* Current Plan Status */}
-      {currentPlan ? (
+
+        <View style={styles.trainingContainer}>
+          <Text style={styles.sectionTitle}>Training Progress</Text>
+        </View>
+
+        {/* Current Plan Status */}
+        {currentPlan ? (
           <View style={styles.trainingSection}>
             <View style={styles.planCard}>
               <Text style={styles.planName}>{currentPlan.name}</Text>
@@ -172,15 +176,21 @@ export default function HomeScreen() {
             </View>
           </View>
         ) : (
-          <View style = {styles.trainingSection}>
-          <Text style={styles.sectionTitle}>Training Progress</Text>
-          <View style={styles.planCard}>
-            <Text style={styles.progressText}>You don’t currently have a plan. Select one in the "training" page!</Text>
-          </View>
+          <View style={styles.trainingSection}>
+            <Text style={styles.sectionTitle}>Training Progress</Text>
+            <View style={styles.planCard}>
+              <Text style={styles.progressText}>You don’t currently have a plan. Select one in the "training" page!</Text>
+            </View>
           </View>
         )}
       </ScrollView>
 
+      {/* Run Tracking Modal */}
+      <RunTrackingModal
+        visible={showRunModal}
+        onClose={() => setShowRunModal(false)}
+        onSuccess={loadData}
+      />
     </GradientBackground>
   );
 }
