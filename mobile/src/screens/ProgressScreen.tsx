@@ -12,6 +12,13 @@ import { GradientBackground } from '../components/GradientBackground';
 import { StatCard } from '../components/StatCard';
 import { colors } from '../theme';
 import { apiClient, UserStats, Run, TrainingPlan } from '../api/client';
+// @ts-ignore
+import { LineChart, Grid, YAxis, XAxis } from 'react-native-svg-charts';
+// @ts-ignore
+import * as scale from 'd3-scale';
+// @ts-ignore
+
+
 
 export default function RunsScreen() {
   const [showRunModal, setShowRunModal] = useState(false);
@@ -21,7 +28,8 @@ export default function RunsScreen() {
   const [loading, setLoading] = useState(true);
   const [showAllRuns, setShowAllRuns] = useState(false);
   const [visibleRunsCount, setVisibleRunsCount] = useState(3);
-
+  const paceData = runs.map(run => run.pace || 0);
+  const runDates = runs.map(run => run.dateFormatted);
 
   const loadData = async () => {
     try {
@@ -71,6 +79,8 @@ export default function RunsScreen() {
     const seconds = Math.floor(paceInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  
 
   useEffect(() => {
     loadData();
@@ -130,6 +140,30 @@ export default function RunsScreen() {
             />
           </View>
         </View>
+
+        <View style={styles.chartSection}>
+  <Text style={styles.sectionTitle}>Average Pace Over Time</Text>
+  <View style={styles.chartContainer}>
+    <YAxis
+      data={paceData}
+      contentInset={{ top: 20, bottom: 20 }}
+      svg={{ fill: colors.white, fontSize: 10 }}
+      numberOfTicks={5}
+      formatLabel={value => formatPace(value)}
+    />
+    <View style={styles.chart}>
+      <LineChart
+        style={{ flex: 1 }}
+        data={paceData}
+        svg={{ stroke: colors.yellow }}
+        contentInset={{ top: 20, bottom: 20 }}
+      >
+        <Grid />
+      </LineChart>
+    </View>
+  </View>
+</View>
+
 
         {/* Runs List */}
         <View style={styles.runsContainer}>
@@ -378,4 +412,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
+
+  chartSection: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  chartContainer: {
+    height: 160,
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  chart: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  
 });
