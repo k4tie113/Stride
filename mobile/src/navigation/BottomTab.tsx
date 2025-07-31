@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import RunsScreen from '../screens/ProgressScreen';
 import PlansScreen from '../screens/PlansScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import ProfileScreen from '../screens/AnalysisScreen';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme';
 import { BlurView } from 'expo-blur';
@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255, 255, 255, 0.2)', // soft white translucent
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)', // soft border
-    backdropFilter: 'blur(10px)', // optional with web
+    borderTopColor: 'rgba(255, 255, 255, 0.3)' // soft border
   },
 });

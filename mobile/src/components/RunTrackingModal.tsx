@@ -121,6 +121,7 @@ export const RunTrackingModal: React.FC<Props> = ({ visible, onClose, onSuccess 
               { label: 'Interval Training', value: 'Interval' },
               { label: 'Long Run', value: 'Long Run' },
               { label: 'Recovery Run', value: 'Recovery' },
+              { label: 'Walk/Jog', value: 'Walk/Jog' },
             ]}
             style={pickerSelectStyles}
           />

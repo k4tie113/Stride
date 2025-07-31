@@ -1,4 +1,6 @@
 // src/api/client.ts (Mock Version)
+import { beginner5KPlan, beginner5KSchedule } from '../data/beginner5k'
+import { intermediateHalfPlan, intermediateHalfSchedule } from '../data/interm';
 
 // ---- TYPES ----
 
@@ -8,6 +10,7 @@ export interface User {
     firstname: string;
     currentPlanId: string | null;
     currentWeek: number | null;
+    planStartDate?: string;
   }
   
   export interface Run {
@@ -61,8 +64,9 @@ export interface User {
     id: 'user-123',
     username: 'runner_katie',
     firstname: 'Katie',
-    currentPlanId: 'plan-001',
+    currentPlanId: 'plan-002',
     currentWeek: 2,
+    planStartDate: '2025-07-15',
   };
   
   const mockStats: UserStats = {
@@ -137,52 +141,12 @@ export interface User {
     },
   ];
   
-  const mockPlan: TrainingPlan = {
-    id: 'plan-001',
-    name: '5K Beginner Plan',
-    description: 'A 6-week program to get you to your first 5K.',
-    level: 'Beginner',
-    weeks: 6,
-    runsPerWeek: 3,
-    currentWeek: 2,
-    progress: 28,
-    weeklyCompleted: 2,
-    weeklyTarget: 3,
-  };
+  const mockPlan = beginner5KPlan;
+  const mockSchedule = beginner5KSchedule;
 
-  const dummy10KPlan: TrainingPlan = {
-    id: 'plan-002',
-    name: '10K Intermediate Plan',
-    description: 'Train for your first 10K with this intermediate plan.',
-    level: 'intermediate',
-    weeks: 8,
-    runsPerWeek: 4,
-  };
 
-  const mockPlans: TrainingPlan[] = [mockPlan, dummy10KPlan];
+  const mockPlans: TrainingPlan[] = [mockPlan, intermediateHalfPlan];
   
-  const mockSchedule: WeeklySchedule[] = [
-    {
-      id: 'day-1',
-      planId: 'plan-001',
-      week: 2,
-      day: 1,
-      runType: 'Easy Run',
-      distance: 3,
-      description: 'Run at a conversational pace.',
-      isRest: false,
-    },
-    {
-      id: 'day-2',
-      planId: 'plan-001',
-      week: 2,
-      day: 2,
-      runType: 'Rest Day',
-      distance: 0,
-      description: 'Take a rest day.',
-      isRest: true,
-    },
-  ];
 
   class MockApiClient {
     async getUserStats(): Promise<UserStats> {
@@ -212,23 +176,69 @@ export interface User {
       mockRuns.unshift(run); // prepend to list
     }
   
-    async getTrainingPlans(): Promise<TrainingPlan[]> {
-      return mockPlans;
-    }
-  
-    async getCurrentPlan(): Promise<TrainingPlan> {
-      return mockPlan;
-    }
-  
+   
     async updateCurrentPlan(planId: string): Promise<User> {
       mockUser.currentPlanId = planId;
       return mockUser;
     }
-  
-    async getWeeklySchedule(week: number): Promise<WeeklySchedule[]> {
-      return mockSchedule.filter(day => day.week === week);
+
+    async getTrainingPlans(): Promise<TrainingPlan[]> {
+      return [beginner5KPlan, intermediateHalfPlan];
     }
+    
+    async getCurrentPlan(): Promise<TrainingPlan> {
+      const today = new Date();
+      const startDate = mockUser.planStartDate ? new Date(mockUser.planStartDate) : today;
+      const daysElapsed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const currentPlan = mockPlans.find(p => p.id === mockUser.currentPlanId) || beginner5KPlan;
+      const currentWeek = Math.min(Math.floor(daysElapsed / 7) + 1, currentPlan.weeks);
+      const totalDays = Math.min(daysElapsed + 1, currentPlan.weeks * 7);
+
+      const scheduleMap: { [key: string]: WeeklySchedule[] } = {
+          'plan-001': beginner5KSchedule,
+          'plan-002': intermediateHalfSchedule,
+      };
+      const schedule = scheduleMap[currentPlan.id] || [];
+      const completedRuns = schedule.filter(day => !day.isRest && ((day.week - 1) * 7 + day.day <= totalDays)).length;
+
+      return {
+          ...currentPlan,
+          currentWeek,
+          progress: Math.round((currentWeek / currentPlan.weeks) * 100),
+          weeklyCompleted: schedule.filter(d => d.week === currentWeek && !d.isRest && ((d.week - 1) * 7 + d.day <= totalDays)).length,
+          weeklyTarget: currentPlan.runsPerWeek,
+      };
   }
+
+    
+    
+  async getWeeklySchedule(week: number): Promise<WeeklySchedule[]> {
+    const scheduleMap: { [key: string]: WeeklySchedule[] } = {
+        'plan-001': beginner5KSchedule,
+        'plan-002': intermediateHalfSchedule,
+    };
+
+    const schedule = scheduleMap[mockUser.currentPlanId || 'plan-001'] || [];
+
+    const today = new Date();
+    const startDate = mockUser.planStartDate ? new Date(mockUser.planStartDate) : today;
+    const daysElapsed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    return schedule
+        .filter(day => day.week === week)
+        .map(day => {
+            const absoluteDay = (day.week - 1) * 7 + day.day - 1;
+            return {
+                ...day,
+                completed: absoluteDay <= daysElapsed,
+                isToday: absoluteDay === daysElapsed,
+            };
+        });
+  }
+    
+    
+}
   
   
 const apiClient = new MockApiClient();

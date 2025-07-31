@@ -61,26 +61,14 @@ export default function PlansScreen() {
     }
   };
 
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case 'beginner':
-        return 'star';
-      case 'intermediate':
-        return 'flash';
-      case 'advanced':
-        return 'calendar';
-      default:
-        return 'star';
-    }
-  };
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'beginner':
+      case 'Beginner':
         return '#10B981'; // Green
-      case 'intermediate':
+      case 'Intermediate':
         return '#F59E0B'; // Orange
-      case 'advanced':
+      case 'Advanced':
         return '#EF4444'; // Red
       default:
         return '#10B981';
@@ -173,11 +161,7 @@ export default function PlansScreen() {
                 >
                   <View style={styles.planHeader}>
                     <View style={styles.planHeaderLeft}>
-                      <Ionicons
-                        name={getLevelIcon(plan.level) as any}
-                        size={20}
-                        color={colors.white}
-                      />
+
                       <Text style={styles.planName}>{plan.name}</Text>
                     </View>
                     <View
@@ -199,9 +183,9 @@ export default function PlansScreen() {
                       {plan.weeks} weeks • {plan.runsPerWeek} runs/week
                     </Text>
                     <Text style={styles.planIntensity}>
-                      {plan.level === 'beginner'
+                      {plan.level === 'Beginner'
                         ? 'Low intensity'
-                        : plan.level === 'intermediate'
+                        : plan.level === 'Intermediate'
                         ? 'Medium intensity'
                         : 'High intensity'}
                     </Text>
@@ -331,13 +315,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   levelBadge: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 5,
     paddingVertical: 4,
     borderRadius: 12,
+    right: -10,
   },
   levelBadgeText: {
     color: colors.white,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   currentPlanName: {

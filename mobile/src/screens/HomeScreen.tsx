@@ -14,6 +14,7 @@ import { colors } from '../theme';
 import { UserStats, Run, TrainingPlan } from '../api/client';
 import apiClient from '../api/client';
 import { RunTrackingModal } from '../components/RunTrackingModal';
+import { WeeklySchedule } from '../api/client';
 
 export default function HomeScreen() {
   const [showRunModal, setShowRunModal] = useState(false);
@@ -24,6 +25,19 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
   const [userName, setUserName] = useState('');
+  const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule[]>([]);
+  const [showSchedule, setShowSchedule] = useState(false);
+
+
+useEffect(() => {
+  const fetchSchedule = async () => {
+    if (currentPlan?.currentWeek) {
+      const schedule = await apiClient.getWeeklySchedule(currentPlan.currentWeek);
+      setWeeklySchedule(schedule);
+    }
+  };
+  fetchSchedule();
+}, [currentPlan]);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -54,16 +68,23 @@ export default function HomeScreen() {
         apiClient.getCurrentPlan(),
         apiClient.getAllRuns(),
       ]);
+  
       setStats(statsData);
       setCurrentPlan(currentPlanData);
       setRuns(runsData);
+  
+      // ✅ Fetch schedule *after* currentPlan is ready
+      if (currentPlanData.currentWeek) {
+        const schedule = await apiClient.getWeeklySchedule(currentPlanData.currentWeek);
+        setWeeklySchedule(schedule);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  };  
 
   useEffect(() => {
     loadData();
@@ -167,12 +188,37 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <View style={styles.planStat}>
-                  <Text style={styles.planStatLabel}>This Week</Text>
+                  <Text style={styles.planStatLabel}>This Week's Runs</Text>
                   <Text style={styles.planStatValue}>
                     {currentPlan.weeklyTarget || 0}
                   </Text>
                 </View>
               </View>
+              <TouchableOpacity
+  style={[styles.scheduleButton, showSchedule ? styles.hideButton : null]}
+  onPress={() => setShowSchedule(!showSchedule)}
+>
+  <Text style={styles.scheduleButtonText}>
+    {showSchedule
+      ? 'Hide Week ' + currentPlan.currentWeek + ' Schedule'
+      : 'View Week ' + currentPlan.currentWeek + ' Schedule'}
+  </Text>
+</TouchableOpacity>
+{showSchedule && weeklySchedule.map((day) => (
+  <View key={day.id} style={styles.scheduleItem}>
+    <View style={styles.scheduleHeader}>
+      <Text style={styles.scheduleDay}>
+        Day {day.day}: {day.runType} {day.isToday ? '(Today)' : ''}
+      </Text>
+      {day.completed && !day.isToday && (
+        <Ionicons name="checkmark-circle" size={20} color="white" />
+      )}
+    </View>
+    <Text style={styles.scheduleDesc}>{day.description}</Text>
+  </View>
+))}
+
+
             </View>
           </View>
         ) : (
@@ -357,4 +403,36 @@ const styles = StyleSheet.create({
   trainingContainer: {
     paddingHorizontal: 24,
   },
+  scheduleButton: {
+    backgroundColor: colors.yellow, // yellow
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  scheduleButtonText: {
+    fontWeight: 'bold',
+    color: colors.purple,
+  },
+  scheduleItem: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: '#ffffff22',
+    borderRadius: 10,
+  },
+  scheduleDay: {
+    fontWeight: '600',
+    fontSize: 15,
+    color: colors.white,
+  },
+  scheduleDesc: {
+    fontSize: 14,
+    color: colors.white,
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },  
+  
 });
