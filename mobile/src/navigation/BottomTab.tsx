@@ -52,14 +52,7 @@ export default function BottomTab() {
   );
 }
 
-// Just for now: placeholder screens
-function PlaceholderScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Coming Soon</Text>
-    </View>
-  );
-}
+
 
 const styles = StyleSheet.create({
   placeholder: {

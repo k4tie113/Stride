@@ -14,6 +14,7 @@ import { colors } from '../theme';
 import { UserStats, Run, TrainingPlan } from '../api/client';
 import apiClient from '../api/client';
 import { RunTrackingModal } from '../components/RunTrackingModal';
+import LogoutButton from '../components/LogoutButton';
 import { WeeklySchedule } from '../api/client';
 
 export default function HomeScreen() {
@@ -110,6 +111,7 @@ useEffect(() => {
       >
         {/* App Header */}
         <View style={styles.header}>
+        <LogoutButton />
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={48} color={colors.white} />
           </View>
@@ -223,7 +225,6 @@ useEffect(() => {
           </View>
         ) : (
           <View style={styles.trainingSection}>
-            <Text style={styles.sectionTitle}>Training Progress</Text>
             <View style={styles.planCard}>
               <Text style={styles.progressText}>You don’t currently have a plan. Select one in the "training" page!</Text>
             </View>
