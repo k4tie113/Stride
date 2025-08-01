@@ -1,3 +1,4 @@
+// src/screens/HomeScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -16,6 +17,7 @@ import apiClient from '../api/client';
 import { RunTrackingModal } from '../components/RunTrackingModal';
 import LogoutButton from '../components/LogoutButton';
 import { WeeklySchedule } from '../api/client';
+import { useUser } from '../state/UserContext'; // ✅ Corrected import path
 
 export default function HomeScreen() {
   const [showRunModal, setShowRunModal] = useState(false);
@@ -25,20 +27,20 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
-  const [userName, setUserName] = useState('');
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule[]>([]);
   const [showSchedule, setShowSchedule] = useState(false);
 
+  const { user } = useUser(); // ✅ Get the user object directly from the context
 
-useEffect(() => {
-  const fetchSchedule = async () => {
-    if (currentPlan?.currentWeek) {
-      const schedule = await apiClient.getWeeklySchedule(currentPlan.currentWeek);
-      setWeeklySchedule(schedule);
-    }
-  };
-  fetchSchedule();
-}, [currentPlan]);
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (currentPlan?.currentWeek) {
+        const schedule = await apiClient.getWeeklySchedule(currentPlan.currentWeek);
+        setWeeklySchedule(schedule);
+      }
+    };
+    fetchSchedule();
+  }, [currentPlan]);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -49,12 +51,8 @@ useEffect(() => {
     } else {
       setGreeting('Good evening');
     }
-    // fetch user data
-    const fetchUser = async () => {
-      const stats = await apiClient.getUserStats();
-      setUserName(stats.user.firstname);
-    };
-    fetchUser();
+
+    // ✅ Removed the old fetchUser() function
   }, []);
 
   const onRefresh = () => {
@@ -63,6 +61,13 @@ useEffect(() => {
   };
 
   const loadData = async () => {
+    // ✅ Check for a logged-in user before making API calls
+    if (!user) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       const [statsData, currentPlanData, runsData] = await Promise.all([
         apiClient.getUserStats(),
@@ -74,7 +79,6 @@ useEffect(() => {
       setCurrentPlan(currentPlanData);
       setRuns(runsData);
   
-      // ✅ Fetch schedule *after* currentPlan is ready
       if (currentPlanData.currentWeek) {
         const schedule = await apiClient.getWeeklySchedule(currentPlanData.currentWeek);
         setWeeklySchedule(schedule);
@@ -89,7 +93,7 @@ useEffect(() => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]); // ✅ Added 'user' to the dependency array
 
   const totalDistance = runs.reduce((sum, run) => sum + run.distance, 0);
   const averagePace = runs.length > 0
@@ -101,6 +105,16 @@ useEffect(() => {
     const seconds = Math.floor(paceInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+  
+  if (loading) {
+    return (
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading data...</Text>
+        </View>
+      </GradientBackground>
+    );
+  }
 
   return (
     <GradientBackground>
@@ -111,12 +125,12 @@ useEffect(() => {
       >
         {/* App Header */}
         <View style={styles.header}>
-        <LogoutButton />
+          <LogoutButton />
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={48} color={colors.white} />
           </View>
           <Text style={styles.appTitle}>Welcome</Text>
-          <Text style={styles.greeting}>{greeting}, {userName}</Text>
+          {user && <Text style={styles.greeting}>{greeting}, {user.firstname}</Text>}
         </View>
 
         {/* Stats Grid */}
@@ -197,30 +211,28 @@ useEffect(() => {
                 </View>
               </View>
               <TouchableOpacity
-  style={[styles.scheduleButton, showSchedule ? styles.hideButton : null]}
-  onPress={() => setShowSchedule(!showSchedule)}
->
-  <Text style={styles.scheduleButtonText}>
-    {showSchedule
-      ? 'Hide Week ' + currentPlan.currentWeek + ' Schedule'
-      : 'View Week ' + currentPlan.currentWeek + ' Schedule'}
-  </Text>
-</TouchableOpacity>
-{showSchedule && weeklySchedule.map((day) => (
-  <View key={day.id} style={styles.scheduleItem}>
-    <View style={styles.scheduleHeader}>
-      <Text style={styles.scheduleDay}>
-        Day {day.day}: {day.runType} {day.isToday ? '(Today)' : ''}
-      </Text>
-      {day.completed && !day.isToday && (
-        <Ionicons name="checkmark-circle" size={20} color="white" />
-      )}
-    </View>
-    <Text style={styles.scheduleDesc}>{day.description}</Text>
-  </View>
-))}
-
-
+                style={[styles.scheduleButton, showSchedule ? styles.hideButton : null]}
+                onPress={() => setShowSchedule(!showSchedule)}
+              >
+                <Text style={styles.scheduleButtonText}>
+                  {showSchedule
+                    ? 'Hide Week ' + currentPlan.currentWeek + ' Schedule'
+                    : 'View Week ' + currentPlan.currentWeek + ' Schedule'}
+                </Text>
+              </TouchableOpacity>
+              {showSchedule && weeklySchedule.map((day) => (
+                <View key={day.id} style={styles.scheduleItem}>
+                  <View style={styles.scheduleHeader}>
+                    <Text style={styles.scheduleDay}>
+                      Day {day.day}: {day.runType} {day.isToday ? '(Today)' : ''}
+                    </Text>
+                    {day.completed && !day.isToday && (
+                      <Ionicons name="checkmark-circle" size={20} color="white" />
+                    )}
+                  </View>
+                  <Text style={styles.scheduleDesc}>{day.description}</Text>
+                </View>
+              ))}
             </View>
           </View>
         ) : (
@@ -248,6 +260,16 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.purple,
+  },
+  loadingText: {
+    color: colors.white,
+    fontSize: 18,
   },
   statusBar: {
     flexDirection: 'row',
@@ -434,6 +456,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },  
-  
+  },
 });

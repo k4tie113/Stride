@@ -1,3 +1,4 @@
+// src/screens/PlansScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,8 +14,10 @@ import { GradientBackground } from '../components/GradientBackground';
 import { colors } from '../theme';
 import { TrainingPlan } from '../api/client';
 import apiClient from '../api/client';
+import { useUser } from '../state/UserContext'; // ✅ Import the hook
 
 export default function PlansScreen() {
+  const { user } = useUser(); // ✅ Get the user from context
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
   const [currentPlan, setCurrentPlan] = useState<TrainingPlan | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,6 +26,11 @@ export default function PlansScreen() {
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
 
   const loadData = async () => {
+    if (!user) { // ✅ Check for user before fetching data
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const [plansData, currentPlanData] = await Promise.all([
         apiClient.getTrainingPlans(),
@@ -41,7 +49,7 @@ export default function PlansScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]); // ✅ Add 'user' to the dependency array
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -49,6 +57,10 @@ export default function PlansScreen() {
   };
 
   const handleSelectPlan = async (planId: string) => {
+    if (!user) { // ✅ Check for user before updating
+      Alert.alert('Error', 'Please log in to select a plan.');
+      return;
+    }
     setUpdatingPlan(planId);
     try {
       await apiClient.updateCurrentPlan(planId);

@@ -146,9 +146,11 @@ class MockApiClient {
   private loggedInUser: User | null = null;
 
   async login(username: string, password: string): Promise<User | null> {
+    console.log('client.ts: login called with:', { username, password });
     const found = mockUsers.find(
       (u) => u.username === username && u.password === password
     );
+    console.log('client.ts: Result of search:', found ? found.username : 'No user found');
     if (found) {
       this.loggedInUser = found;
       return found;

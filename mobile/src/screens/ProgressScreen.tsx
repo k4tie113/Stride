@@ -1,3 +1,4 @@
+// src/screens/ProgressScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,11 +16,10 @@ import { UserStats, Run } from '../api/client';
 import apiClient from '../api/client';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-
-
-
+import { useUser } from '../state/UserContext'; // ✅ Import the hook
 
 export default function RunsScreen() {
+  const { user } = useUser(); // ✅ Get the user object from context
   const [runs, setRuns] = useState<Run[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,7 +29,19 @@ export default function RunsScreen() {
   const paceData = runs.map(run => run.pace || 0);
   const runDates = runs.map(run => run.dateFormatted);
   const screenWidth = Dimensions.get('window').width;
+
+  const formatPace = (paceInSeconds: number): string => {
+    const minutes = Math.floor(paceInSeconds / 60);
+    const seconds = Math.floor(paceInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const loadData = async () => {
+    if (!user) { // ✅ Check for a user before making API calls
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const [runsData, statsData] = await Promise.all([
         apiClient.getAllRuns(),
@@ -71,18 +83,10 @@ export default function RunsScreen() {
   const averagePace = runs.length > 0 
     ? runs.reduce((sum, run) => sum + (run.pace || 0), 0) / runs.length 
     : 0;
-
-  const formatPace = (paceInSeconds: number): string => {
-    const minutes = Math.floor(paceInSeconds / 60);
-    const seconds = Math.floor(paceInSeconds % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   
-
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]); // ✅ Add 'user' to the dependency array
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -249,9 +253,9 @@ export default function RunsScreen() {
   <TouchableOpacity
     onPress={() => {
       if (visibleRunsCount >= runs.length) {
-        setVisibleRunsCount(3); // collapse
+        setVisibleRunsCount(3);
       } else {
-        setVisibleRunsCount(prev => Math.min(prev + 3, runs.length)); // show +3
+        setVisibleRunsCount(prev => Math.min(prev + 3, runs.length));
       }
     }}
     style={styles.viewAllButton}
@@ -266,8 +270,6 @@ export default function RunsScreen() {
           )}
           </View>
       </ScrollView>
-
-    
     </GradientBackground>
   );
 }
@@ -337,7 +339,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
   },
   emptyTitle: {
     color: colors.white,
@@ -456,5 +457,4 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
   },
-  
 });

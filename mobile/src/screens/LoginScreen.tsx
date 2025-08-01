@@ -8,6 +8,8 @@ import { colors } from '../theme';
 import { Image } from 'react-native';
 import logo from '../images/logo.png'
 
+import { useUser } from '../state/UserContext'; // ✅ Import the new hook
+
 
 // ✅ Define the RootStackParamList with both screens
 type RootStackParamList = {
@@ -23,19 +25,23 @@ type LoginScreenProps = {
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-    
+  const { setUser } = useUser(); // ✅ CORRECT: Call the hook at the top level
   const handleLogin = async () => {
+    console.log('Attempting login...'); // ✅ Add this log
     // ✅ Use the apiClient to log in
     const user = await apiClient.login(username, password);
 
     if (user) {
+        console.log('Login successful, setting user:', user); // ✅ Add this log
       // ✅ If login is successful, reset the navigation stack
       //    This removes the Login screen from the history and replaces it with 'Main'
+      setUser(user); // ✅ Save the user to the global state
       navigation.reset({
         index: 0,
         routes: [{ name: 'Main' }],
       });
     } else {
+        console.log('Login failed, showing alert.'); // ✅ Add this log
       Alert.alert('Login Failed', 'Invalid credentials');
     }
   };

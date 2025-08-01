@@ -3,13 +3,16 @@ import React from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // ✅ CORRECTED import
 import { RootStackParamList } from '../navigation/RootNavigator';
+import { useUser } from '../state/UserContext';
 
-type LogoutButtonNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
+// ✅ Use NativeStackNavigationProp here as well
+type LogoutButtonNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const LogoutButton = () => {
   const navigation = useNavigation<LogoutButtonNavigationProp>();
+  const { setUser } = useUser();
 
   const handleLogout = () => {
     Alert.alert(
@@ -24,7 +27,7 @@ const LogoutButton = () => {
           text: 'Log Out',
           style: 'destructive',
           onPress: () => {
-            // ✅ This is the key step: reset the navigation state
+            setUser(null);
             navigation.reset({
               index: 0,
               routes: [{ name: 'Login' }],
@@ -46,8 +49,8 @@ const LogoutButton = () => {
 const styles = StyleSheet.create({
   logoutButton: {
     position: 'absolute',
-    top: 40, // Adjust this value to position the button correctly
-    right: 5, // Adjust this value to position the button correctly
+    top: 40,
+    right: 5,
     padding: 10,
     zIndex: 10,
   },
