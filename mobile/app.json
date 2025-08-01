@@ -14,14 +14,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.runtracker.pro"
+      "bundleIdentifier": "com.stride.pro"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#7C3AED"
       },
-      "package": "com.runtracker.pro"
+      "package": "com.stride.pro"
     },
     "web": {
       "favicon": "./assets/favicon.png"
