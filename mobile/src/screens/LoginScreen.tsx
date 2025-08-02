@@ -9,6 +9,7 @@ import { Image } from 'react-native';
 import logo from '../images/logo.png'
 
 import { useUser } from '../state/UserContext'; // ✅ Import the new hook
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // ✅ Define the RootStackParamList with both screens
@@ -32,10 +33,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     const user = await apiClient.login(username, password);
 
     if (user) {
-        console.log('Login successful, setting user:', user); // ✅ Add this log
-      // ✅ If login is successful, reset the navigation stack
-      //    This removes the Login screen from the history and replaces it with 'Main'
-      setUser(user); // ✅ Save the user to the global state
+      console.log('Login successful, setting user:', user); // ✅ Add this log
+      try {
+        await AsyncStorage.setItem('userToken', user.token);
+        console.log('Token saved successfully');
+      } catch (error) {
+        console.error('Failed to save token:', error);
+      }
+      setUser(user); 
       navigation.reset({
         index: 0,
         routes: [{ name: 'Main' }],

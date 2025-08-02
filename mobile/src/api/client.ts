@@ -9,6 +9,7 @@ export interface User {
   username: string;
   password: string;
   firstname: string;
+  token: string; // ✅ Add a token to the User interface
   currentPlanId: string | null;
   currentWeek: number | null;
   planStartDate?: string;
@@ -68,6 +69,7 @@ const mockUsers: User[] = [
     username: 'runner_katie',
     password: 'pass123',
     firstname: 'Katie',
+    token: 'mock-token-123', // ✅ Add a mock token
     currentPlanId: 'plan-002',
     currentWeek: 2,
     planStartDate: '2025-07-15',
@@ -144,6 +146,7 @@ const mockPlans: TrainingPlan[] = [beginner5KPlan, intermediateHalfPlan];
 
 class MockApiClient {
   private loggedInUser: User | null = null;
+  private currentToken: string | null = null; // ✅ New property
 
   async login(username: string, password: string): Promise<User | null> {
     console.log('client.ts: login called with:', { username, password });
@@ -153,9 +156,18 @@ class MockApiClient {
     console.log('client.ts: Result of search:', found ? found.username : 'No user found');
     if (found) {
       this.loggedInUser = found;
+      this.currentToken = found.token; // ✅ Set the token on login
       return found;
     }
     return null;
+  }
+
+  // ✅ New method to set the token from storage
+  setToken(token: string | null) {
+    this.currentToken = token;
+    // In a real app, you might validate the token with the server.
+    // For this mock, we'll find the user based on the token.
+    this.loggedInUser = mockUsers.find(u => u.token === token) || null;
   }
 
   getCurrentUser(): User | null {
@@ -254,6 +266,3 @@ class MockApiClient {
 
 const apiClient = new MockApiClient();
 export default apiClient;
-
-  
-  

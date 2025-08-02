@@ -1,6 +1,7 @@
 // src/navigation/RootNavigator.tsx
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, ActivityIndicator, StyleSheet } from 'react-native'; // ✅ Import View, ActivityIndicator, and StyleSheet
 import { useUser } from '../state/UserContext';
 import LoginScreen from '../screens/LoginScreen';
 import BottomTab from './BottomTab';
@@ -13,7 +14,16 @@ export type RootStackParamList = {
 const NativeStack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { user } = useUser();
+  const { user, isLoading } = useUser(); // ✅ Get the isLoading state from the context
+
+  if (isLoading) {
+    // ✅ If the app is still loading (checking for a stored token), show a loading spinner
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <NativeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -27,3 +37,12 @@ export default function RootNavigator() {
     </NativeStack.Navigator>
   );
 }
+
+// ✅ Add a simple stylesheet for the loading screen
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
