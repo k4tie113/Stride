@@ -12,21 +12,26 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { GradientBackground } from '../components/GradientBackground';
 import { colors } from '../theme';
-import { TrainingPlan } from '../api/client';
-import apiClient from '../api/client';
-import { useUser } from '../state/UserContext'; // ✅ Import the hook
+import apiClient, { TrainingPlan } from '../api/planHandler';
+import { useUser } from '../state/UserContext';
+
+// We need a more detailed plan type for the current plan state
+interface CurrentPlan extends TrainingPlan {
+  currentWeek: number;
+  progress: number;
+}
 
 export default function PlansScreen() {
-  const { user } = useUser(); // ✅ Get the user from context
+  const { user } = useUser();
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
-  const [currentPlan, setCurrentPlan] = useState<TrainingPlan | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<CurrentPlan | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
 
   const loadData = async () => {
-    if (!user) { // ✅ Check for user before fetching data
+    if (!user) {
       setLoading(false);
       setRefreshing(false);
       return;
@@ -34,11 +39,11 @@ export default function PlansScreen() {
     try {
       const [plansData, currentPlanData] = await Promise.all([
         apiClient.getTrainingPlans(),
-        apiClient.getCurrentPlan(),
+        apiClient.getCurrentPlan(user.id), // ✅ Pass user.id
       ]);
 
       setPlans(plansData);
-      setCurrentPlan(currentPlanData);
+      setCurrentPlan(currentPlanData as CurrentPlan);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -49,7 +54,7 @@ export default function PlansScreen() {
 
   useEffect(() => {
     loadData();
-  }, [user]); // ✅ Add 'user' to the dependency array
+  }, [user]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -57,13 +62,13 @@ export default function PlansScreen() {
   };
 
   const handleSelectPlan = async (planId: string) => {
-    if (!user) { // ✅ Check for user before updating
+    if (!user) {
       Alert.alert('Error', 'Please log in to select a plan.');
       return;
     }
     setUpdatingPlan(planId);
     try {
-      await apiClient.updateCurrentPlan(planId);
+      await apiClient.updateCurrentPlan(user.id, planId); // ✅ Pass user.id and planId
       await loadData();
       Alert.alert('Success', 'Your training plan has been successfully changed.');
     } catch (error) {
@@ -73,6 +78,7 @@ export default function PlansScreen() {
     }
   };
 
+  // ... (rest of the component, which you have already provided)
 
   const getLevelColor = (level: string) => {
     switch (level) {

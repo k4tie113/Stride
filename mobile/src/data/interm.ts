@@ -1,4 +1,4 @@
-import { TrainingPlan, WeeklySchedule } from '../api/client';
+import { TrainingPlan, WeeklySchedule } from '../api/planHandler';
 
 export const intermediateHalfPlan: TrainingPlan = {
   id: 'plan-002',

@@ -1,16 +1,17 @@
-// src/screens/LoginScreen.tsx (Corrected)
+// src/screens/LoginScreen.tsx
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import apiClient from '../api/client';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+// ✅ REMOVED: import apiClient from '../api/client';
 import { GradientBackground } from '../components/GradientBackground';
 import { colors } from '../theme';
-import { Image } from 'react-native';
 import logo from '../images/logo.png'
 
-import { useUser } from '../state/UserContext'; // ✅ Import the new hook
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// ✅ IMPORT the real supabase client
+import { supabase } from '../supabase/client';
 
+// ✅ IMPORT the useUser hook
+import { useUser } from '../state/UserContext'; 
 
 // ✅ Define the RootStackParamList with both screens
 type RootStackParamList = {
@@ -24,30 +25,30 @@ type LoginScreenProps = {
 };
   
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [username, setUsername] = useState('');
+  // ✅ Change the state variable from 'username' to 'email'
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser(); // ✅ CORRECT: Call the hook at the top level
-  const handleLogin = async () => {
-    console.log('Attempting login...'); // ✅ Add this log
-    // ✅ Use the apiClient to log in
-    const user = await apiClient.login(username, password);
+  const [loading, setLoading] = useState(false);
+  
+  // ✅ We will refactor this hook later to listen to Supabase state
+  const { setUser } = useUser(); 
 
-    if (user) {
-      console.log('Login successful, setting user:', user); // ✅ Add this log
-      try {
-        await AsyncStorage.setItem('userToken', user.token);
-        console.log('Token saved successfully');
-      } catch (error) {
-        console.error('Failed to save token:', error);
-      }
-      setUser(user); 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Main' }],
-      });
+  const handleLogin = async () => {
+    setLoading(true);
+    console.log('Attempting login...'); 
+
+    // ✅ CORRECT: Use the supabase client to log in with email and password
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    setLoading(false);
+    
+    if (error) {
+      console.log('Login failed:', error.message);
+      Alert.alert('Login Failed', error.message);
     } else {
-        console.log('Login failed, showing alert.'); // ✅ Add this log
-      Alert.alert('Login Failed', 'Invalid credentials');
+      console.log('Login successful.');
+      // ✅ We don't need to manually set the user or navigate here.
+      // The UserContext will handle this automatically by listening to the Supabase session.
     }
   };
   
@@ -57,12 +58,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Image source={logo} style={styles.logo} />
 
         <TextInput
-          placeholder="Username"
+          // ✅ Change the placeholder to 'Email'
+          placeholder="Email"
           placeholderTextColor={colors.whiteTransparent60}
           style={styles.input}
-          value={username}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
           autoCapitalize="none"
+          keyboardType="email-address" // ✅ Recommended for email inputs
         />
         <TextInput
           placeholder="Password"
@@ -74,9 +77,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           secureTextEntry
         />
         <View style={styles.buttonWrapper}>
-            {/* ✅ Call handleLogin on press */}
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Log In</Text>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleLogin}
+              disabled={loading} // ✅ Disable the button while loading
+            >
+                <Text style={styles.buttonText}>
+                  {loading ? 'Logging In...' : 'Log In'}
+                </Text>
             </TouchableOpacity>
         </View>
       </View>

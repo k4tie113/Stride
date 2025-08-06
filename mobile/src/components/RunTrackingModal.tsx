@@ -1,3 +1,4 @@
+// src/components/RunTrackingModal.tsx
 import React, { useState } from 'react';
 import {
   Modal,
@@ -12,7 +13,8 @@ import {
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { colors } from '../theme';
-import apiClient from '../api/client';
+import { supabase } from '../supabase/client'; // ✅ Import Supabase client
+import { useUser } from '../state/UserContext'; // ✅ Import useUser hook
 
 interface Props {
   visible: boolean;
@@ -25,53 +27,67 @@ export const RunTrackingModal: React.FC<Props> = ({ visible, onClose, onSuccess 
   const [minutes, setMinutes] = useState('');
   const [seconds, setSeconds] = useState('');
   const [runType, setRunType] = useState('Easy Run');
+  
+  const { user } = useUser(); // ✅ Get the authenticated user
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to save a run.');
+      return;
+    }
+
     const parsedDistance = parseFloat(distance);
     const parsedMinutes = parseInt(minutes);
     const parsedSeconds = parseInt(seconds);
     const totalSeconds = (parsedMinutes || 0) * 60 + (parsedSeconds || 0);
 
-    if (isNaN(parsedDistance) || isNaN(totalSeconds)) {
-      alert('Please enter valid numbers for distance and duration.');
+    if (isNaN(parsedDistance) || isNaN(totalSeconds) || parsedDistance <= 0 || totalSeconds <= 0) {
+      Alert.alert('Invalid Input', 'Please enter valid positive numbers for distance and duration.');
+      return;
+    }
+    
+    const pace = totalSeconds / parsedDistance;
+
+    if (pace < 120) {
+      Alert.alert('Unrealistic Pace', 'Please enter realistic numbers! That pace is nearly impossible.');
       return;
     }
 
-    if (parsedDistance <= 0 || totalSeconds <= 0) {
-        alert('Please enter valid numbers for distance and duration.');
-        return;
-    }
-
-    const pace = totalSeconds > 0 ? totalSeconds / parsedDistance : 0;
-
-    if (pace < 120) {
-        alert('Please enter realistic numbers! That pace is nearly impossible.');
-        return;
-    }
-
     const newRun = {
-      id: 'run-' + Date.now(),
-      userId: 'user-123',
+      user_id: user.id, // ✅ Use the actual user ID
       distance: parsedDistance,
       duration: totalSeconds,
-      runType,
-      date: new Date().toISOString().split('T')[0],
+      run_type: runType, // ✅ Use the correct column name
+      date: new Date().toISOString(),
       pace,
     };
 
-    console.log('Saving new run:', newRun);
+    try {
+      const { error } = await supabase
+        .from('runs')
+        .insert([newRun]);
 
-    apiClient.addRun(newRun).then(() => {
+      if (error) {
+        throw error;
+      }
+
+      console.log('Successfully saved new run:', newRun);
+      
       Alert.alert('Nice work!', 'Congratulations on completing your run!', [
-        { text: 'OK', onPress: () => {} },
+        { text: 'OK', onPress: () => {
+          onSuccess();
+          onClose();
+          setDistance('');
+          setMinutes('');
+          setSeconds('');
+          setRunType('Easy Run');
+        } },
       ]);
-      onSuccess();
-      onClose();
-      setDistance('');
-      setMinutes('');
-      setSeconds('');
-      setRunType('Easy Run');
-    });
+      
+    } catch (error) {
+      console.error('Error saving run:', error);
+      Alert.alert('Error', 'Failed to save your run. Please try again.');
+    }
   };
 
   return (
@@ -139,6 +155,7 @@ export const RunTrackingModal: React.FC<Props> = ({ visible, onClose, onSuccess 
   );
 };
 
+// ... (existing styles)
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,

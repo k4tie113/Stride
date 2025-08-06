@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,61 +7,51 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GradientBackground } from '../components/GradientBackground';
 import { StatCard } from '../components/StatCard';
 import { colors } from '../theme';
-import { UserStats, Run, TrainingPlan } from '../api/client';
-import apiClient from '../api/client';
+
 import { RunTrackingModal } from '../components/RunTrackingModal';
 import LogoutButton from '../components/LogoutButton';
-import { WeeklySchedule } from '../api/client';
-import { useUser } from '../state/UserContext'; // ✅ Corrected import path
+import { useUser, Profile } from '../state/UserContext';
+import { supabase } from '../supabase/client';
+import { useFocusEffect } from '@react-navigation/native';
+
+// ✅ Import the types and the apiClient from the central file
+import apiClient, {
+  TrainingPlan,
+  WeeklySchedule,
+} from '../api/planHandler';
+
+interface Run {
+  id: string;
+  user_id: string;
+  distance: number;
+  duration: number;
+  run_type: string;
+  date: string;
+  pace: number;
+}
+
 
 export default function HomeScreen() {
   const [showRunModal, setShowRunModal] = useState(false);
   const [runs, setRuns] = useState<Run[]>([]);
   const [currentPlan, setCurrentPlan] = useState<TrainingPlan | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);
+  const [stats, setStats] = useState({ totalDistance: 0, averagePace: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule[]>([]);
   const [showSchedule, setShowSchedule] = useState(false);
 
-  const { user } = useUser(); // ✅ Get the user object directly from the context
-
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      if (currentPlan?.currentWeek) {
-        const schedule = await apiClient.getWeeklySchedule(currentPlan.currentWeek);
-        setWeeklySchedule(schedule);
-      }
-    };
-    fetchSchedule();
-  }, [currentPlan]);
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Good morning');
-    } else if (hour < 18) {
-      setGreeting('Good afternoon');
-    } else {
-      setGreeting('Good evening');
-    }
-
-    // ✅ Removed the old fetchUser() function
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
-  };
-
-  const loadData = async () => {
-    // ✅ Check for a logged-in user before making API calls
+  const { user, profile } = useUser();
+  
+  // ✅ loadData is now wrapped in useCallback so it doesn't change on every render
+  const loadData = useCallback(async () => {
     if (!user) {
       setLoading(false);
       setRefreshing(false);
@@ -69,43 +59,85 @@ export default function HomeScreen() {
     }
 
     try {
-      const [statsData, currentPlanData, runsData] = await Promise.all([
-        apiClient.getUserStats(),
-        apiClient.getCurrentPlan(),
-        apiClient.getAllRuns(),
-      ]);
-  
-      setStats(statsData);
-      setCurrentPlan(currentPlanData);
-      setRuns(runsData);
-  
-      if (currentPlanData.currentWeek) {
-        const schedule = await apiClient.getWeeklySchedule(currentPlanData.currentWeek);
-        setWeeklySchedule(schedule);
+      // ✅ Fetch runs and calculate stats
+      const { data: runsData, error: runsError } = await supabase
+        .from('runs')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (runsError) {
+        console.error('Error fetching runs:', runsError.message);
+        throw runsError;
       }
+      const sortedRuns = (runsData || []).sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA.getTime() - dateB.getTime();
+      });
+      setRuns(sortedRuns || []);
+      console.log('Runs fetched and sorted successfully:', sortedRuns.length, 'runs');
+      const totalDistance = (runsData || []).reduce((sum, run) => sum + run.distance, 0);
+      const averagePace = (runsData || []).length > 0
+        ? (runsData || []).reduce((sum, run) => sum + run.pace, 0) / (runsData || []).length
+        : 0;
+      setStats({ totalDistance, averagePace });
+
+      // ✅ Fetch the current plan and its weekly schedule
+      const plan = await apiClient.getCurrentPlan(user.id);
+      setCurrentPlan(plan);
+
+      if (plan && plan.currentWeek) {
+        const schedule = await apiClient.getWeeklySchedule(user.id, plan.currentWeek);
+        setWeeklySchedule(schedule);
+      } else {
+        setWeeklySchedule([]);
+      }
+
     } catch (error) {
       console.error('Error loading data:', error);
+      Alert.alert('Error', 'Failed to load data.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };  
+  }, [user]); // Only re-create loadData if the user object changes
 
-  useEffect(() => {
+  // ✅ Consolidated all the logic into one useFocusEffect
+  useFocusEffect(
+    useCallback(() => {
+      // Set the greeting when the screen comes into focus
+      const hour = new Date().getHours();
+      if (hour < 12) {
+        setGreeting('Good morning');
+      } else if (hour < 18) {
+        setGreeting('Good afternoon');
+      } else {
+        setGreeting('Good evening');
+      }
+
+      // Call loadData to fetch runs and plan data
+      loadData();
+      
+      // We can also keep this debugging code inside if you still need it
+      // fetchAndLogAllUsers();
+
+      return () => {
+        // Optional cleanup function
+      };
+    }, [loadData]) // Re-run this effect only when loadData changes
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
     loadData();
-  }, [user]); // ✅ Added 'user' to the dependency array
-
-  const totalDistance = runs.reduce((sum, run) => sum + run.distance, 0);
-  const averagePace = runs.length > 0
-    ? runs.reduce((sum, run) => sum + (run.pace || 0), 0) / runs.length
-    : 0;
+  };
 
   const formatPace = (paceInSeconds: number): string => {
     const minutes = Math.floor(paceInSeconds / 60);
     const seconds = Math.floor(paceInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
-  
+
   if (loading) {
     return (
       <GradientBackground>
@@ -123,35 +155,32 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* App Header */}
         <View style={styles.header}>
           <LogoutButton />
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={48} color={colors.white} />
           </View>
           <Text style={styles.appTitle}>Welcome</Text>
-          {user && <Text style={styles.greeting}>{greeting}, {user.firstname}</Text>}
+          {profile && <Text style={styles.greeting}>{greeting}, {profile.name || 'Runner'}</Text>}
         </View>
 
-        {/* Stats Grid */}
         <View style={styles.statsSection}>
           <View style={styles.statsRow}>
             <StatCard
               title="Total Distance"
-              value={totalDistance.toFixed(1)}
+              value={stats.totalDistance.toFixed(1)}
               unit="miles"
               icon="trophy"
             />
             <StatCard
               title="Average Pace"
-              value={runs.length > 0 ? formatPace(averagePace) : '0:00'}
+              value={runs.length > 0 ? formatPace(stats.averagePace) : '0:00'}
               unit="per mile"
               icon="trending-up"
             />
           </View>
         </View>
 
-        {/* Main Action Button */}
         <TouchableOpacity
           style={styles.mainButton}
           onPress={() => setShowRunModal(true)}
@@ -172,7 +201,6 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Training Progress</Text>
         </View>
 
-        {/* Current Plan Status */}
         {currentPlan ? (
           <View style={styles.trainingSection}>
             <View style={styles.planCard}>
@@ -200,13 +228,15 @@ export default function HomeScreen() {
                 <View style={styles.planStat}>
                   <Text style={styles.planStatLabel}>Completed</Text>
                   <Text style={styles.planStatValue}>
-                    {currentPlan.weeklyCompleted || 0}
+                    {/* These will be 0 until you implement run logging logic */}
+                    0
                   </Text>
                 </View>
                 <View style={styles.planStat}>
                   <Text style={styles.planStatLabel}>This Week's Runs</Text>
                   <Text style={styles.planStatValue}>
-                    {currentPlan.weeklyTarget || 0}
+                    {/* These will be 0 until you implement run logging logic */}
+                    {currentPlan.runsPerWeek || 0}
                   </Text>
                 </View>
               </View>
@@ -244,7 +274,6 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* Run Tracking Modal */}
       <RunTrackingModal
         visible={showRunModal}
         onClose={() => setShowRunModal(false)}
@@ -427,7 +456,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   scheduleButton: {
-    backgroundColor: colors.yellow, // yellow
+    backgroundColor: colors.yellow,
     padding: 10,
     borderRadius: 8,
     marginTop: 16,

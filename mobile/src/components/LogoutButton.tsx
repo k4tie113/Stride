@@ -1,20 +1,20 @@
-// src/navigation/LogoutButton.tsx
+// src/components/LogoutButton.tsx
 import React from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+// ✅ REMOVED: import { useNavigation } from '@react-navigation/native';
+// ✅ REMOVED: import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// ✅ REMOVED: import { RootStackParamList } from '../navigation/RootNavigator';
+// ✅ REMOVED: import { useUser } from '../state/UserContext';
 import { Ionicons } from '@expo/vector-icons';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // ✅ CORRECTED import
-import { RootStackParamList } from '../navigation/RootNavigator';
-import { useUser } from '../state/UserContext';
+import { supabase } from '../supabase/client';
 
-// ✅ Use NativeStackNavigationProp here as well
-type LogoutButtonNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
-
+// ✅ The component no longer needs navigation props
 const LogoutButton = () => {
-  const navigation = useNavigation<LogoutButtonNavigationProp>();
-  const { setUser } = useUser();
+  // ✅ The hook and state are no longer needed here
+  // const navigation = useNavigation<LogoutButtonNavigationProp>();
+  // const { setUser } = useUser();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Log Out',
       'Are you sure you want to log out?',
@@ -26,12 +26,13 @@ const LogoutButton = () => {
         {
           text: 'Log Out',
           style: 'destructive',
-          onPress: () => {
-            setUser(null);
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
+          onPress: async () => {
+            // ✅ CORRECT: A single call to Supabase to sign out
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+              Alert.alert('Logout failed', error.message);
+            }
+            // ✅ The UserContext handles the rest automatically!
           },
         },
       ],
