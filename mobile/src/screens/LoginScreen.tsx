@@ -16,6 +16,7 @@ import { useUser } from '../state/UserContext';
 // ✅ Define the RootStackParamList with both screens
 type RootStackParamList = {
   Login: undefined;
+  SignUp: undefined; // Add SignUp to the stack
   Main: undefined;
 };
 
@@ -87,6 +88,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 </Text>
             </TouchableOpacity>
         </View>
+
+        {/* ✅ This is the only new section I have added */}
+        <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.signupLink}>Sign up</Text>
+            </TouchableOpacity>
+        </View>
+        
       </View>
     </GradientBackground>
   );
@@ -129,5 +139,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 10,
   },
-  
+  signupContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  signupText: {
+    color: colors.whiteTransparent80,
+    fontSize: 14,
+    marginRight: 5,
+  },
+  signupLink: {
+    color: colors.yellow,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });

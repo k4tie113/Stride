@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Stride",
+    "scheme": "stride",
     "slug": "stride",
     "version": "1.0.0",
     "orientation": "portrait",

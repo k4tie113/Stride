@@ -4,10 +4,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, ActivityIndicator, StyleSheet } from 'react-native'; // ✅ Import View, ActivityIndicator, and StyleSheet
 import { useUser } from '../state/UserContext';
 import LoginScreen from '../screens/LoginScreen';
+import SignUpScreen from '../screens/SignUpScreen'; // ✅ Import SignUpScreen
 import BottomTab from './BottomTab';
 
 export type RootStackParamList = {
   Login: undefined;
+  SignUp: undefined;
   Main: undefined;
 };
 
@@ -32,7 +34,10 @@ export default function RootNavigator() {
         <NativeStack.Screen name="Main" component={BottomTab} />
       ) : (
         // ✅ If no user, show the Login screen
-        <NativeStack.Screen name="Login" component={LoginScreen} />
+        <NativeStack.Group>
+          <NativeStack.Screen name="Login" component={LoginScreen} />
+          <NativeStack.Screen name="SignUp" component={SignUpScreen} />
+        </NativeStack.Group>
       )}
     </NativeStack.Navigator>
   );
