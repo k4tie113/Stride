@@ -1,6 +1,6 @@
 # Stride
 
-**Stride** ![Stride logo](logo.png) is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress.
+![Stride logo](logo.png) Stride is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress. Developed by Katie Li.
 
 ---
 
