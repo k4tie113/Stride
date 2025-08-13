@@ -1,4 +1,4 @@
-/*import React from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { GradientBackground} from '../components/GradientBackground';
 import { colors } from '../theme';
@@ -59,9 +59,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AnalysisScreen;*/
+export default AnalysisScreen;
 
-
+/*
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Alert } from 'react-native';
 import { GradientBackground } from '../components/GradientBackground';
@@ -193,3 +193,4 @@ const styles = StyleSheet.create({
 });
 
 export default AnalysisScreen;
+*/

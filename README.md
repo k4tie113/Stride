@@ -1,6 +1,8 @@
 # Stride
 
 ![Stride logo](logo.png) 
+![training](demo1.png) 
+![home](demo2.png) 
 
 ## Description
 
