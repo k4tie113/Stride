@@ -1,8 +1,6 @@
 # Stride
 
 ![Stride logo](logo.png) 
-![training](demo1.png) 
-![home](demo2.png) 
 
 ## Description
 
@@ -35,3 +33,7 @@ Stride is a mobile fitness app built with **React Native** and **Expo**, designe
 - React Native (with Expo)
 - Form Analyzer: TensorFlow, MoveNet
 - Backend: PostgreSQL database, Supabase
+
+## Demo Images
+![training](demo1.png) 
+![home](demo2.png) 
