@@ -12,21 +12,35 @@
       "resizeMode": "contain",
       "backgroundColor": "#7C3AED"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
+      "icon": "./assets/icon.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.stride.pro"
+      "bundleIdentifier": "com.stride.pro",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#7C3AED"
       },
+      "icon": "./assets/icon.png",
       "package": "com.stride.pro"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": []
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "366748d1-cd3c-4814-a906-34be186ac9e3"
+      }
+    }
   }
 }

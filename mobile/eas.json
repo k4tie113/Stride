@@ -1,0 +1,14 @@
+{
+    "build": {
+      "development": {
+        "developmentClient": true,
+        "distribution": "internal",
+        "ios": { "image": "sdk-50" }
+      },
+      "simulator": {
+        "developmentClient": true,
+        "ios": { "simulator": true, "image": "sdk-50" }
+      }
+    }
+  }
+  

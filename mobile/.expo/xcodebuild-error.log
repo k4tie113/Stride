@@ -1,0 +1,9 @@
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, id:5041227F-4F10-488B-A29F-07F7C97F772C, OS:17.5, name:iPhone 15 }
+{ platform:iOS Simulator, id:5041227F-4F10-488B-A29F-07F7C97F772C, OS:17.5, name:iPhone 15 }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftEmitModule normal arm64 Emitting\ module\ for\ Stride (in target 'Stride' from project 'Stride')
+(1 failure)

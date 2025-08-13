@@ -1,4 +1,67 @@
-// src/screens/AnalysisScreen.tsx
+/*import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { GradientBackground} from '../components/GradientBackground';
+import { colors } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+
+const AnalysisScreen = () => {
+  return (
+    <GradientBackground>
+      <View style={styles.container}>
+        <Text style={styles.title}>AI Form Analysis</Text>
+        <Text style={styles.description}>
+          Upload a short video of your run to get AI feedback on your form, posture, and stride. This feature is coming soon!
+        </Text>
+
+        <TouchableOpacity style={styles.uploadButton} disabled>
+          <Ionicons name="cloud-upload-outline" size={24} color={colors.purple} />
+          <Text style={styles.uploadText}>Upload Run Video</Text>
+        </TouchableOpacity>
+      </View>
+    </GradientBackground>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.white,
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 16,
+    color: colors.white,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 22,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.yellow,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    opacity: 0.6, // to indicate it's disabled for now
+  },
+  uploadText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+    color: colors.purple,
+  },
+});
+
+export default AnalysisScreen;*/
+
+
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Alert } from 'react-native';
 import { GradientBackground } from '../components/GradientBackground';
@@ -6,11 +69,12 @@ import { colors } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import { useRunningAnalyzer } from '../pose/useRunningAnalyzer';
+import { useRunningAnalyzer } from '../hooks/useRunningAnalyzer'; // <-- our on-device AI hook
 
 const AnalysisScreen = () => {
   const [video, setVideo] = useState<string | null>(null);
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
+
   const { analyzeVideo, isAnalyzing, result, reset } = useRunningAnalyzer();
 
   const handleVideoPick = async () => {
@@ -19,19 +83,24 @@ const AnalysisScreen = () => {
       Alert.alert('Permission required', 'We need access to your camera roll to upload videos.');
       return;
     }
+
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       quality: 1,
     });
+
     if (!res.canceled && res.assets?.[0]?.uri) {
       const uri = res.assets[0].uri;
       setVideo(uri);
+
       try {
         const { uri: thumb } = await VideoThumbnails.getThumbnailAsync(uri);
         setVideoThumbnail(thumb);
-      } catch(e){ /* thumbnail optional */ }
-      // Kick off analysis immediately (or let user tap Start)
+      } catch {
+      }
+
+      // start analysis immediately (or comment out and let user press Start)
       analyzeVideo(uri);
     }
   };
@@ -42,7 +111,7 @@ const AnalysisScreen = () => {
     await reset();
   };
 
-  // UI states
+  // ----- UI states -----
   const renderContent = () => {
     if (isAnalyzing) {
       return (
@@ -60,12 +129,17 @@ const AnalysisScreen = () => {
         <View style={styles.resultsContainer}>
           <Text style={styles.title}>Analysis Complete!</Text>
           {videoThumbnail ? <Image source={{ uri: videoThumbnail }} style={styles.thumbnail} /> : null}
+
           <Text style={styles.resultText}>
             Knee flexion (contact): {Math.round(m.kneeFlexionDeg)}°{'\n'}
             Trunk lean: {Math.round(m.trunkLeanDeg)}°{'\n'}
             Head offset: {Math.round(m.headOffsetPct)}%
           </Text>
-          {result.notes.map((n,i)=>(<Text key={i} style={styles.resultText}>• {n}</Text>))}
+
+          {result.notes.map((n, i) => (
+            <Text key={i} style={styles.resultText}>• {n}</Text>
+          ))}
+
           <TouchableOpacity style={styles.uploadButton} onPress={handleReset}>
             <Ionicons name="reload-outline" size={24} color={colors.purple} />
             <Text style={styles.uploadText}>Analyze Another Video</Text>
@@ -87,6 +161,7 @@ const AnalysisScreen = () => {
       );
     }
 
+    // Default state
     return (
       <View style={styles.container}>
         <Text style={styles.title}>AI Form Analysis</Text>

@@ -1,10 +1,12 @@
 # Stride
 
-**Stride** is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress with a clean, modern interface.
+**Stride** ![Stride logo](logo.png) is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress.
+
+---
 
 ## Features
 
-- **Login Screen**: Enter your username and password (Currently Sign Up is still being implemented)
+- **Login / Signup**: Enter your email and create a password. Two factor authentication supported.
 - **Home Dashboard**:
   - Weekly mileage and pace statistics
   - Allows users to log their runs (distance, time, type of workout)
@@ -16,18 +18,14 @@
 - **Progress and Statistics**:
   - Progress graph of average pace over time
   - List of past runs with details like distance and pace
-- **AI Form Analysis**:
-  - (Still under development)
-  - Upload a video of running, get feedback from AI on how to improve your running posture
+- **AI Form Analyzer**:
+  - Upload a video of yourself running, get feedback on how to improve your running posture
+  - Implemented using tensorflow and MoveNet
+
+---
 
 ## Tech Stack
 
 - React Native (with Expo)
-- Expo vector icons and blur effects
-
-## How to Test
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/yourusername/stride.git
-   cd stride
+- TensorFlow, MoveNet
+- PostgreSQL database via Supabase
