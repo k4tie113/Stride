@@ -1,6 +1,10 @@
 # Stride
 
-![Stride logo](logo.png) Stride is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress. Developed by Katie Li.
+![Stride logo](logo.png) 
+
+## Description
+
+Stride is a mobile fitness app built with **React Native** and **Expo**, designed for runners to track workouts, follow structured training plans, and monitor progress. Developed by Katie Li.
 
 ---
 
@@ -18,14 +22,14 @@
 - **Progress and Statistics**:
   - Progress graph of average pace over time
   - List of past runs with details like distance and pace
-- **AI Form Analyzer**:
-  - Upload a video of yourself running, get feedback on how to improve your running posture
-  - Implemented using tensorflow and MoveNet
+- **AI Form Analyzer (NEWEST FEATURE!!)**:
+  - Upload a clear video of yourself running and get feedback on how to improve your running posture.
+  - Implemented using TensorFlow and MoveNet.
 
 ---
 
 ## Tech Stack
 
 - React Native (with Expo)
-- TensorFlow, MoveNet
-- PostgreSQL database via Supabase
+- Form Analyzer: TensorFlow, MoveNet
+- Backend: PostgreSQL database, Supabase
