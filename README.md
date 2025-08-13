@@ -35,5 +35,8 @@ Stride is a mobile fitness app built with **React Native** and **Expo**, designe
 - Backend: PostgreSQL database, Supabase
 
 ## Demo Images
-<img src="demo1.png" width="30%" alt="training">
-<img src="demo2.png" width="30%" alt="home">
+<div style="display: flex; gap: 20px;">
+  <img src="demo1.png" width="30%" alt="training">
+  <img src="demo2.png" width="30%" alt="home">
+  <img src="demo3.png" width="30%" alt="signup">
+</div>
